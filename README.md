@@ -89,7 +89,7 @@ uvicorn main:app --reload
 ### 1. Using the Web Frontend
 
 1.  Once the server is running, open your web browser and go to:
-    [http://127.0.0.1:8000](http://127.0.0.1:8000)
+    [http://127.0.0.1:8000](http://127.0.0.1:8000) or [https://humuslike-sightliest-rima.ngrok-free.app](https://humuslike-sightliest-rima.ngrok-free.app)
 
 2.  The application `index.html` will be served automatically.
 
