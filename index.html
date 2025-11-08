@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Comment Generator</title>
+    
+    <!-- Font Awesome for icons (CDN link is fine) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- 
+      START: Inline CSS 
+      (Content from style.css is now inside this <style> tag)
+    -->
+    <style>
+        :root {
+            --primary-color: #1877f2;
+            --secondary-color: #42b72a;
+            --background-color: #f0f2f5;
+            --text-color: #1c1e21;
+            --border-color: #dddfe2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem; /* Reduced margin to make space for error */
+        }
+
+        #keyword-input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        #generate-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        #generate-btn:hover {
+            background-color: #166fe5;
+        }
+
+        #generate-btn:disabled {
+            background-color: #a0c3ec;
+            cursor: not-allowed;
+        }
+
+        /* Error message style (replaces alert()) */
+        .error-message {
+            display: none; /* Hidden by default */
+            background-color: #fff0f1;
+            color: #d93025;
+            border: 1px solid #f5c6cb;
+            padding: 0.8rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .comment-box {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 0.8rem;
+            background-color: #f0f2f5; /* BG for the SVG */
+        }
+
+        .username {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        /* --- MODIFICATION: Changed ID to class --- */
+        .generated-comment-text {
+            margin: 0.8rem 0;
+            color: var(--text-color);
+            min-height: 20px; /* Prevents layout jump */
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.8rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 0.8rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #65676b;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .timestamp {
+            color: #65676b;
+            font-size: 0.9rem;
+            margin-left: auto;
+        }
+
+        .loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2rem 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .input-section {
+                flex-direction: column;
+            }
+
+            #generate-btn {
+                width: 100%;
+            }
+        }
+    </style>
+    <!-- END: Inline CSS -->
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fab fa-facebook"></i> Facebook Comment Generator</h1>
+        </header>
+        
+        <main>
+            <div class="input-section">
+                <input type="text" 
+                       id="keyword-input" 
+                       placeholder="Enter a keyword (e.g., cooking, travel, music)"
+                       aria-label="Enter a keyword">
+                <button id="generate-btn">
+                    <i class="fas fa-comment"></i> Generate Comment
+                </button>
+            </div>
+
+            <!-- This div will show errors instead of alert() -->
+            <div id="error-message" class="error-message"></div>
+
+            <div class="result-section">
+                <div class="loader" id="loader" style="display: none;">
+                    <div class="spinner"></div>
+                </div>
+                
+                <!-- 
+                  --- MODIFICATION ---
+                  This div is now the container where JS will add all the comment boxes.
+                  The single, static comment-box has been removed.
+                -->
+                <div id="comments-list-container">
+                    <!-- Generated comments will be inserted here -->
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- 
+      START: Inline JavaScript 
+      (Content from main.js is now inside this <script> tag)
+    -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get all DOM elements
+            const keywordInput = document.getElementById('keyword-input');
+            const generateBtn = document.getElementById('generate-btn');
+            const loader = document.getElementById('loader');
+            
+            // --- MODIFICATION: Get the new list container ---
+            const commentsListContainer = document.getElementById('comments-list-container');
+            
+            // This is the new error message element (replaces alert())
+            const errorMessage = document.getElementById('error-message');
+
+            // Use relative path for API, works from any domain
+            const API_URL = window.location.origin + '/generate_comment';
+
+            // Attach event listeners
+            generateBtn.addEventListener('click', generateComment);
+            keywordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    generateBtn.click(); // Trigger the button click
+                }
+            });
+
+            /**
+             * --- NEW HELPER FUNCTION ---
+             * Creates the HTML string for a single comment box.
+             * @param {string} commentText - The text of the comment.
+             * @returns {string} - The HTML string for one comment box.
+             */
+            function createCommentBoxHTML(commentText) {
+                // Basic HTML escaping to prevent XSS
+                const safeCommentText = commentText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+                return `
+                    <div class="comment-box"> 
+                        <div class="comment-header">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzY1Njc2YiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==" 
+                                 alt="Profile" 
+                                 class="profile-pic">
+                            <span class="username">AI Generated Comment</span>
+                        </div>
+                        <p class="generated-comment-text">${safeCommentText}</p> 
+                        <div class="comment-actions">
+                            <button class="action-btn">
+                                <i class="far fa-thumbs-up"></i> Like
+                            </button>
+                            <button class="action-btn">
+                                <i class="far fa-comment"></i> Reply
+                            </button>
+                            <span class="timestamp">Just now</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            async function generateComment() {
+                const keyword = keywordInput.value.trim();
+                
+                // --- MODIFICATION: Replaced alert() with error div ---
+                if (!keyword) {
+                    errorMessage.textContent = 'Please enter a keyword';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                // Show loader, hide old results, and disable button
+                loader.style.display = 'flex';
+                
+                // --- MODIFICATION: Clear the list container ---
+                commentsListContainer.innerHTML = ''; 
+                
+                errorMessage.style.display = 'none'; // Hide old errors
+                generateBtn.disabled = true;
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ keyword })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    
+                    // --- MODIFICATION: Loop through all comments ---
+                    if (data.generated_comments && data.generated_comments.length > 0) {
+                        
+                        // Loop through each comment and add it to the list
+                        data.generated_comments.forEach(comment => {
+                            const commentBoxHTML = createCommentBoxHTML(comment);
+                            commentsListContainer.innerHTML += commentBoxHTML;
+                        });
+
+                    } else {
+                        throw new Error('No comments were generated.');
+                    }
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    // --- MODIFICATION: Replaced alert() with error div ---
+                    errorMessage.textContent = `Error: ${error.message}`;
+                    errorMessage.style.display = 'block';
+                } finally {
+                    // Always re-enable button and hide loader
+                    loader.style.display = 'none';
+                    generateBtn.disabled = false;
+                }
+            }
+        });
+    </script>
+    <!-- END: Inline JavaScript -->
+</body>
+</html>
